@@ -9,6 +9,7 @@ public class PathDrawer : MonoBehaviour
     private float minPointDistance = 0.3f;
     private int maxPoints = 1000;
     private const float liftHeight = 0.02f;
+    public Car car;
 
     public List<Vector3> path = new List<Vector3>();
 
@@ -69,6 +70,11 @@ public class PathDrawer : MonoBehaviour
             //Do something with path data
 
             //---------------------------
+
+            if (path.Count >= 2)
+            {
+                car.SetPath(new List<Vector3>(path)); 
+            }
 
             path.Clear();
             line.positionCount = 0;
