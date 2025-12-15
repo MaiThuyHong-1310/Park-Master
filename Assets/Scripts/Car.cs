@@ -10,7 +10,7 @@ public class Car : MonoBehaviour
     List<Vector3> m_path;
     Vector3 nextPosOfCar;
     Vector3 curPosOfCar;
-    float speedOfCar;
+    [SerializeField] float speedOfCar;
     bool statusRunOfCar;
 
     Coroutine m_animCoroutine;
@@ -33,16 +33,19 @@ public class Car : MonoBehaviour
         while (pathIndex < path.Count)
         {
             curPosOfCar = m_visualBody.position;
+            float t = 0f;
 
-            // Waiting 1s to give new position of car
-            yield return new WaitForSeconds(1f);
-
-            // Taking new position of car and move
-            m_visualBody.position = path[pathIndex];
-            nextPosOfCar = m_visualBody.position;
-            pathIndex++;
-
-            
+            // checking condition click on car and taking new position of car and move
+            if (Vector3.Distance(curPosOfCar, path[pathIndex]) < 2f)
+            {
+                while (t < 1f)
+                {
+                    t += Time.deltaTime / speedOfCar;
+                    m_visualBody.position = Vector3.Lerp(curPosOfCar, path[pathIndex], t);
+                    yield return null;
+                }
+                pathIndex++;
+            }
         }
     }
 
