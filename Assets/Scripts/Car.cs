@@ -29,28 +29,33 @@ public class Car : MonoBehaviour
         Assert.IsTrue(path.Count > 1);
 
         int pathIndex = 0;
-        float lengthRunned = 0f;
+        //float lengthRunned = 0f;
+        float remainDistance = 0;
 
-        //Đi qua từng đoạn trong path
+        // go through each section of the path
         while (pathIndex < path.Count - 1)
         {
             float segmentLength = (path[pathIndex] - path[pathIndex + 1]).magnitude;
-            float lengthOfCarRunned = lengthRunned / segmentLength; //(0-1)
+            //float lengthOfCarRunned = 0 / segmentLength; //(0-1)
+            float progress = remainDistance / segmentLength;
 
-            while (lengthOfCarRunned < 1f)
+            while (progress < 1f)
             {
                 float lengthOfFrame = speedOfCar * Time.deltaTime;
-                lengthOfCarRunned += lengthOfFrame / segmentLength;
+                progress += lengthOfFrame / segmentLength;
 
-                // update pos
-                m_visualBody.position = Vector3.Lerp(path[pathIndex], path[pathIndex + 1], lengthOfCarRunned);
-                Debug.Log("CurPos is: " + m_visualBody.position);
+                // update pos after each frame
+                m_visualBody.position = Vector3.Lerp(path[pathIndex], path[pathIndex + 1], progress);
                 yield return null;
             }
+
+            remainDistance = (progress - 1) * segmentLength;
 
             // move segment
             pathIndex++;
         }
+
+        m_visualBody.position = path[path.Count - 1];
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
