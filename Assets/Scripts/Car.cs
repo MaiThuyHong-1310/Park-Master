@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -9,7 +9,7 @@ public class Car : MonoBehaviour
     [SerializeField] Transform m_visualBody;
     List<Vector3> m_path;
     Vector3 nextPosOfCar;
-    Vector3 curPosOfCar;
+    //Vector3 curPosOfCar;
     [SerializeField] float speedOfCar;
     bool statusRunOfCar;
 
@@ -26,26 +26,30 @@ public class Car : MonoBehaviour
     IEnumerator CarRunAnim(List<Vector3> path)
     {
         Assert.IsFalse(path == null);
+        Assert.IsTrue(path.Count > 1);
 
         int pathIndex = 0;
+        float lengthRunned = 0f;
 
-        // Copy path
-        while (pathIndex < path.Count)
+        //Đi qua từng đoạn trong path
+        while (pathIndex < path.Count - 1)
         {
-            curPosOfCar = m_visualBody.position;
-            float t = 0f;
+            float segmentLength = (path[pathIndex] - path[pathIndex + 1]).magnitude;
+            float lengthOfCarRunned = lengthRunned / segmentLength; //(0-1)
 
-            // checking condition click on car and taking new position of car and move
-            if (Vector3.Distance(curPosOfCar, path[pathIndex]) < 2f)
+            while (lengthOfCarRunned < 1f)
             {
-                while (t < 1f)
-                {
-                    t += Time.deltaTime / speedOfCar;
-                    m_visualBody.position = Vector3.Lerp(curPosOfCar, path[pathIndex], t);
-                    yield return null;
-                }
-                pathIndex++;
+                float lengthOfFrame = speedOfCar * Time.deltaTime;
+                lengthOfCarRunned += lengthOfFrame / segmentLength;
+
+                // update pos
+                m_visualBody.position = Vector3.Lerp(path[pathIndex], path[pathIndex + 1], lengthOfCarRunned);
+                Debug.Log("CurPos is: " + m_visualBody.position);
+                yield return null;
             }
+
+            // move segment
+            pathIndex++;
         }
     }
 
