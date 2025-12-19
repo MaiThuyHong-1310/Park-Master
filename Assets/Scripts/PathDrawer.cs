@@ -8,9 +8,8 @@ public class PathDrawer : MonoBehaviour
     private LineRenderer line;
     private float minPointDistance = 0.3f;
     private int maxPoints = 1000;
-    private const float liftHeight = 0.02f;
+    public CarSelectionManager selectionCar;
     public Car car;
-
     public List<Vector3> path = new List<Vector3>();
 
     Vector3 lastPosition;
@@ -34,6 +33,14 @@ public class PathDrawer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        car = selectionCar.selectedCar;
+
+        // if car is none -> no draw line
+        if (car == null)
+        {
+            return;
+        }
+
         Vector2 posMouse = Mouse.current.position.ReadValue();
         Ray ray = Camera.main.ScreenPointToRay(posMouse);
 
@@ -51,7 +58,7 @@ public class PathDrawer : MonoBehaviour
             {
                 var currentPosition = hit.point;
 
-                if(path.Count < maxPoints && Vector3.Distance(lastPosition, currentPosition) > minPointDistance)
+                if (path.Count < maxPoints && Vector3.Distance(lastPosition, currentPosition) > minPointDistance)
                 {
                     var index = line.positionCount++;
 
@@ -63,7 +70,8 @@ public class PathDrawer : MonoBehaviour
             }
         }
 
-        if(m_isDragging && Mouse.current.leftButton.wasReleasedThisFrame)
+
+        if (m_isDragging && Mouse.current.leftButton.wasReleasedThisFrame)
         {
             m_isDragging = false;
 
@@ -73,11 +81,12 @@ public class PathDrawer : MonoBehaviour
 
             if (path.Count >= 2)
             {
-                car.SetPath(new List<Vector3>(path)); 
+                car.SetPath(new List<Vector3>(path));
             }
 
             path.Clear();
             line.positionCount = 0;
+            selectionCar.selectedCar = null;
         }
     }
 

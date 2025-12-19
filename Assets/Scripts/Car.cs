@@ -8,15 +8,55 @@ public class Car : MonoBehaviour
 {
     [SerializeField] Transform m_visualBody;
     List<Vector3> m_path;
-    Vector3 nextPosOfCar;
-    //Vector3 curPosOfCar;
     [SerializeField] float speedOfCar;
-    bool statusRunOfCar;
+    bool isSelected;
+    [SerializeField]
+    CarSelectionManager carSelectionManage;
+    [SerializeField] ParkingSpotTarget parkingSpotTarget;
 
     Coroutine m_animCoroutine;
 
+    public Vector3 GetCarBodyPos()
+    {
+        return m_visualBody.position;
+    }
+
     public void SetPath(List<Vector3> path)
     {
+        // if distance between last point of path and parking position less than minDistance
+        int lengthOfParkingTarget = parkingSpotTarget.listParkingTarget.Length;
+
+        float[] arrayDistance = new float[lengthOfParkingTarget];
+
+        Vector3 minPosition = parkingSpotTarget.listParkingTarget[0].position;  //goat 
+
+        float minDistance = 1000f;
+
+        // need to taking the position has distance between targetParking and lastPosition is min
+        for (int i = 0; i < lengthOfParkingTarget; i++)
+        {
+            // Taking position for loop 
+            Vector3 positionParkingTarget = parkingSpotTarget.listParkingTarget[i].position;
+            Debug.Log("positionParkingTarget: " + positionParkingTarget);
+
+            // caculating distance between targetParking and lastPosition
+            arrayDistance[i] = Vector3.Distance(positionParkingTarget, path[path.Count - 1]);
+            Debug.Log("arrayDistance[i]: " + arrayDistance[i]);
+
+            if (arrayDistance[i] < minDistance)
+            {
+                Debug.Log("minDistance: " + arrayDistance[i]);
+                minDistance = arrayDistance[i];
+                minPosition = positionParkingTarget;
+            }
+        }
+
+        // add parkingTarget into path
+        if (minDistance < 5f)
+        {
+            path.Add(minPosition);
+        }
+        
         m_path = path;
         if (m_animCoroutine != null) StopCoroutine(m_animCoroutine);
         m_animCoroutine = StartCoroutine(CarRunAnim(path));
@@ -63,4 +103,23 @@ public class Car : MonoBehaviour
     {
         
     }
+
+    // extra function
+    public void SetSelected()
+    {
+        isSelected = true;
+
+        // Add any event when click on car
+        Debug.Log("This car is selecting");
+    }
+
+    public void StopCar()
+    {
+        if (m_animCoroutine != null)
+        {
+            StopCoroutine(m_animCoroutine);
+            m_animCoroutine = null;
+        }
+    }
+
 }
