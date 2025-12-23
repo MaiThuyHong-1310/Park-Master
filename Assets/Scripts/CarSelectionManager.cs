@@ -6,8 +6,12 @@ public class CarSelectionManager : MonoBehaviour
 
     public Car selectedCar;
     [SerializeField] LayerMask carMask;
+    [SerializeField] LayerMask StartPos;
     public Car[] arrayCar;
-    float minDistance = 1.5f;
+    float minDistance2 = 1.5f;
+    int checkWin;
+    int winCar = 0;
+    int indexOfCarWin = 0;
 
     void Start()
     {
@@ -29,30 +33,69 @@ public class CarSelectionManager : MonoBehaviour
             {
                 for (int j = i+1; j < arrayCar.Length; j++)
                 {
-                    //Debug.Log("START CHECKING!!!");
                     // Take position of car
                     Vector3 posCar1 = arrayCar[i].GetCarBodyPos();
                     Vector3 posCar2 = arrayCar[j].GetCarBodyPos();
                     Debug.Log("DISTANCE OF TWO CARS: " + Vector3.Distance(posCar1, posCar2));
 
-                    if (Vector3.Distance(posCar1, posCar2) < minDistance)
+
+                    // Losed condition
+                    if (Vector3.Distance(posCar1, posCar2) < minDistance2)
                     {
-                        Debug.Log("VARRRR, YOU LOSED!!!");
                         StopAllCars();
+                        arrayCar[i].statusCar = -1;
+                        //Debug.Log("VARRRR, YOU LOSED!!!");
+                        checkWin = -1;
                     }
                 }
             }
-            return;
+
+            
+            for (int i = indexOfCarWin; i < arrayCar.Length; i++)
+            {
+                //Debug.Log("DISTANCE BETWEEN CAR AND PARKINGSPOTTARGET: " + Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[i].GetParkingSpotTarget().transform.position));
+                if (Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[i].GetParkingSpotTarget().transform.position) == 0)
+                {
+                    winCar++;
+                    indexOfCarWin++;
+                }
+                //Debug.Log("NUMBER OF CAR WIN: " + winCar);
+            }
+
+            if (winCar == arrayCar.Length)
+            {
+                checkWin = 1;
+                winCar = 0;
+            }
+
+            if (checkWin == -1)
+            {
+                Debug.Log("YOU LOSED");
+            }
+            else
+            {
+                Debug.Log("YOU WIN");
+            }
         }
         else
         {
             Vector2 pointOnScreen = Mouse.current.position.ReadValue();
             Ray ray = Camera.main.ScreenPointToRay(pointOnScreen);
 
-            if (Physics.Raycast(ray, out RaycastHit hit,1000f, carMask))
+            RaycastHit[] hits = Physics.RaycastAll(ray, 1000f);
+
+            for (int i = 0; i < hits.Length; i++)
             {
-                selectedCar = hit.collider.GetComponentInParent <Car>();
-                selectedCar.SetSelected(); // true
+                if (LayerMask.LayerToName(hits[i].collider.gameObject.layer) == "StartPos")
+                {
+                    selectedCar = hits[i].collider.GetComponentInParent<Car>();
+                    selectedCar.SetSelected(); // true
+                }
+
+                if (LayerMask.LayerToName(hits[i].collider.gameObject.layer) == "Car")
+                {
+                    Debug.Log("EXIST IF CONDITION!");
+                }
             }
         }
     }

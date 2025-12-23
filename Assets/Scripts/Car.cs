@@ -13,12 +13,19 @@ public class Car : MonoBehaviour
     [SerializeField]
     CarSelectionManager carSelectionManage;
     [SerializeField] ParkingSpotTarget parkingSpotTarget;
+    [SerializeField] ParkingSpotStart startPos;
+    public int statusCar = 0;
 
     Coroutine m_animCoroutine;
 
     public Vector3 GetCarBodyPos()
     {
         return m_visualBody.position;
+    }
+
+    public ParkingSpotTarget GetParkingSpotTarget()
+    {
+        return parkingSpotTarget;
     }
 
     public void SetPath(List<Vector3> path)
@@ -52,7 +59,7 @@ public class Car : MonoBehaviour
         }
 
         // add parkingTarget into path
-        if (minDistance < 5f)
+        if (minDistance < 2f)
         {
             path.Add(minPosition);
         }
@@ -84,8 +91,12 @@ public class Car : MonoBehaviour
                 float lengthOfFrame = speedOfCar * Time.deltaTime;
                 progress += lengthOfFrame / segmentLength;
 
-                // update pos after each frame
+                // update pos and rot after each frame
+                Vector3 dir = (path[pathIndex + 1] - path[pathIndex]).normalized;
+                Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up) * Quaternion.Euler(90,0,0);
+
                 m_visualBody.position = Vector3.Lerp(path[pathIndex], path[pathIndex + 1], progress);
+                m_visualBody.rotation = Quaternion.Slerp(m_visualBody.rotation, targetRot, speedOfCar * Time.deltaTime);
                 yield return null;
             }
 
