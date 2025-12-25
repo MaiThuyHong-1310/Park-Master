@@ -53,7 +53,7 @@ public class CarSelectionManager : MonoBehaviour
             
             for (int i = indexOfCarWin; i < arrayCar.Length; i++)
             {
-                //Debug.Log("DISTANCE BETWEEN CAR AND PARKINGSPOTTARGET: " + Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[i].GetParkingSpotTarget().transform.position));
+                Debug.Log("DISTANCE BETWEEN CAR AND PARKINGSPOTTARGET: " + Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[i].GetParkingSpotTarget().transform.position));
                 if (Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[i].GetParkingSpotTarget().transform.position) == 0)
                 {
                     winCar++;
@@ -72,7 +72,7 @@ public class CarSelectionManager : MonoBehaviour
             {
                 Debug.Log("YOU LOSED");
             }
-            else
+            else if (checkWin == 1)
             {
                 Debug.Log("YOU WIN");
             }
