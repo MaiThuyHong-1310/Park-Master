@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.InputSystem;
 
 
 public class Car : MonoBehaviour
@@ -12,8 +13,11 @@ public class Car : MonoBehaviour
     bool isSelected;
     [SerializeField]
     CarSelectionManager carSelectionManage;
+    [SerializeField] LayerMask startPosMask;
     [SerializeField] ParkingSpotTarget parkingSpotTarget;
     [SerializeField] ParkingSpotStart startPos;
+    Quaternion startRotationOfCar;
+    Vector3 dir;
     public int statusCar = 0;
 
     Coroutine m_animCoroutine;
@@ -92,8 +96,8 @@ public class Car : MonoBehaviour
                 progress += lengthOfFrame / segmentLength;
 
                 // update pos and rot after each frame
-                Vector3 dir = (path[pathIndex + 1] - path[pathIndex]).normalized;
-                Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up) * Quaternion.Euler(90,0,0);
+                dir = (path[pathIndex + 1] - path[pathIndex]).normalized;
+                Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up) * Quaternion.Euler(90, 0, 0) * Quaternion.Euler(0,0,90);
 
                 m_visualBody.position = Vector3.Lerp(path[pathIndex], path[pathIndex + 1], progress);
                 m_visualBody.rotation = Quaternion.Slerp(m_visualBody.rotation, targetRot, speedOfCar * Time.deltaTime);
@@ -109,10 +113,55 @@ public class Car : MonoBehaviour
         m_visualBody.position = path[path.Count - 1];
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        startRotationOfCar = this.transform.rotation;    
+    }
+
+    void Update()
+    {
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            Vector2 mouPos = Mouse.current.position.ReadValue();
+            Ray ray = Camera.main.ScreenPointToRay(mouPos);
+
+            RaycastHit[] hits = Physics.RaycastAll(ray, 1000f);
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (LayerMask.LayerToName(hits[i].collider.gameObject.layer) == "StartPos")
+                {
+                    if (m_animCoroutine == null)
+                    {
+                        Debug.Log("");
+                    }
+                    else
+                    {
+                        StopCoroutine(m_animCoroutine);
+                        m_visualBody.transform.position = startPos.transform.position;
+                        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+                    }
+
+                }
+
+                if (LayerMask.LayerToName(hits[i].collider.gameObject.layer) == "Car")
+                {
+                    Debug.Log("");
+                }
+            }
+        }
+        else if (Mouse.current.leftButton.wasReleasedThisFrame)
+        {
+            if (m_animCoroutine == null)
+            {
+                Debug.Log("");
+            }
+            else
+            {
+                m_animCoroutine = StartCoroutine(CarRunAnim(m_path));
+            }
+            
+        }
     }
 
     // extra function

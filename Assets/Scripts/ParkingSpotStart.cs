@@ -3,6 +3,8 @@ using UnityEngine;
 public class ParkingSpotStart : MonoBehaviour
 {
     public Transform[] listParkingStart;
+    //public Vector3 posOfStartSpot;
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
