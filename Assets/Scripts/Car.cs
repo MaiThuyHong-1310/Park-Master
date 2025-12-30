@@ -136,28 +136,36 @@ public class Car : MonoBehaviour
         }
     }
 
+    IEnumerator ReturnToStart()
+    {
+        Vector3 targetPos = startPos.transform.position;
+        float stopDist = 0.05f;
 
-    //IEnumerator returnStartSpot()
-    //{
-    //    Vector3 startPos = m_path[0];
-    //    while (Vector3.Distance(this.m_visualBody.position, startPos) < 0.1f)
-    //    {
-    //        this.m_visualBody.position = Vector3.Lerp(this.m_visualBody.position, startPos, speedOfCar * Time.deltaTime);
-    //    }
-    //    yield return null;
+        while (Vector3.Distance(m_visualBody.position, targetPos) > stopDist)
+        {
+            float extraProgress = (speedOfCar * Time.deltaTime) / Vector3.Distance(m_visualBody.position, targetPos);
+            m_visualBody.position = Vector3.Lerp(m_visualBody.position, targetPos, extraProgress);
+            yield return null;
+        }
 
-    //    m_visualBody.position = startPos;
-    //    m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
-    //}
+        m_visualBody.position = targetPos;
+        m_visualBody.rotation = Quaternion.Euler(90f, -90f, 0);
 
-    //public void StopAndStartReturn()
-    //{
-    //    if (m_animCoroutine != null)
-    //    {
-    //        StopCoroutine(m_animCoroutine);
-    //        m_animCoroutine = null;
-    //    }
-    //}
+        m_animCoroutine = null;
+    }
+
+    public void StopAndReturnToStart()
+    {
+        if (m_animCoroutine != null)
+        {
+            StopCoroutine(m_animCoroutine);
+            m_animCoroutine = null;
+        }
+
+        m_animCoroutine = StartCoroutine(ReturnToStart());
+    }
+
+
 
     void Start()
     {
@@ -184,9 +192,13 @@ public class Car : MonoBehaviour
                     }
                     else
                     {
-                        StopCoroutine(m_animCoroutine);
-                        m_visualBody.transform.position = startPos.transform.position;
-                        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+                        //StopCoroutine(m_animCoroutine);
+                        ////m_visualBody.transform.position = startPos.transform.position;
+                        //Debug.Log("speed return is 1f");
+                        //m_visualBody.transform.position = Vector3.Lerp(m_visualBody.transform.position, startPos.transform.position, 0.1f);
+                        //m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+                        StopAndReturnToStart();
+
                     }
 
                 }
@@ -229,16 +241,16 @@ public class Car : MonoBehaviour
         }
     }
 
-    public void StopAndReset()
-    {
-        if (m_animCoroutine != null)
-        {
-            StopCoroutine(m_animCoroutine);
-            m_animCoroutine = null;
-        }
+    //public void StopAndReset()
+    //{
+    //    if (m_animCoroutine != null)
+    //    {
+    //        StopCoroutine(m_animCoroutine);
+    //        m_animCoroutine = null;
+    //    }
 
-        m_visualBody.transform.position = startPos.transform.position;
-        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
-    }
+    //    m_visualBody.transform.position = startPos.transform.position;
+    //    m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+    //}
 
 }

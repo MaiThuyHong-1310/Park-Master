@@ -31,16 +31,21 @@ public class ScoreManager : MonoBehaviour
         Score.Value = 0;
     }
 
-    public void MarkLevelStartScore(int levelId)
+    public void MarkScoreAtLevelStart(int levelId)
     {
         levelStartScore[levelId] = Score.Value;
     }
 
-    public void ResetScoreAtLevel(int levelID)
+    public void RestoreScoreAtLevelStart(int levelId)
     {
-        if (levelID > 0)
+        if (levelStartScore.TryGetValue(levelId, out int value))
         {
-            levelStartScore[levelID] = levelStartScore[levelID - 1];
+            Score.Value = value;
+        }
+        else
+        {
+            Debug.LogWarning($"No saved score for level {levelId}");
         }
     }
+
 }

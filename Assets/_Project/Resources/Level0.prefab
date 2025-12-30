@@ -467,7 +467,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Car
   m_visualBody: {fileID: 985741695351783767}
-  speedOfCar: 10
+  speedOfCar: 20
   carSelectionManage: {fileID: 0}
   startPosMask:
     serializedVersion: 2

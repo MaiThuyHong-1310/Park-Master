@@ -61,7 +61,7 @@ public class CarSelectionManager : MonoBehaviour
                 //Stop and reset state of cars
                 for(int i = 0; i < arrayCar.Length; i++)
                 {
-                    arrayCar[i].StopAndReset();
+                    arrayCar[i].StopAndReturnToStart();
                 }
 
                 reachedCars.Clear();

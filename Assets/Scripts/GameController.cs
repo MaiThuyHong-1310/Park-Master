@@ -23,6 +23,9 @@ public class GameController : Singleton<GameController>
 
     bool m_changingLevel;
 
+    int m_scoreBackup;
+
+
     private void Start()
     {
         m_currentLevelId = 0;
@@ -32,7 +35,8 @@ public class GameController : Singleton<GameController>
         m_carSelectionManager.onCollectingAllCar += OnWinLevel;
         m_carSelectionManager.varCarWithOtherCar += OnLoseLevel;
 
-        m_score = 0;
+        ScoreManager.Instance.Score.Value = 0;
+        m_scoreBackup = ScoreManager.Instance.Score.Value;
         updateScoreUI();
 
     }
@@ -53,7 +57,8 @@ public class GameController : Singleton<GameController>
 
     public void LoadLevel(int id)
     {
-        //ScoreManager.Instance.MarkScoreAtLevel();
+        m_scoreBackup = ScoreManager.Instance.Score.Value;
+
         int totalLevel = 2;
 
         m_carSelectionManager.Clear();
@@ -62,17 +67,19 @@ public class GameController : Singleton<GameController>
         {
             m_currentLevel.Dispose();
             Destroy(m_currentLevel.gameObject);
-            //m_currentLevel = null;
         }
 
-        m_currentLevel = Instantiate(Resources.Load<GameObject>($"Level{id % totalLevel}")).GetComponent<Level>();
+        m_currentLevel = Instantiate(Resources.Load<GameObject>($"Level{id % totalLevel}"))
+            .GetComponent<Level>();
+
         m_currentLevel.Init();
         m_carSelectionManager.SetCarsForLevel(m_currentLevel.Cars.ToArray());
     }
 
+
     void OnWinLevel(int count)
     {
-        addScore(100);
+        ScoreManager.Instance.AddScore(100);
 
         Debug.Log($"WIN COLLECTING {count} cars");
 
@@ -93,8 +100,11 @@ public class GameController : Singleton<GameController>
 
     public void ReplayLevel()
     {
-        //ScoreManager.Instance.ResetScoreAtLevel(m_currentLevelId);
+        //ScoreManager.Instance.RestoreScoreAtLevelStart(m_currentLevelId);
+        ScoreManager.Instance.Score.Value = m_scoreBackup;
         Debug.Log("REPLAY THIS LEVEL!");
+        Debug.Log("SCORE OF THIS LEVEL: " + m_scoreBackup);
+        updateScoreUI();
         LoadLevel(m_currentLevelId);
         replayButton.SetActive(false);
         m_isGameOver = false;
@@ -117,13 +127,14 @@ public class GameController : Singleton<GameController>
     {
         if (m_scoreText != null)
         {
-            m_scoreText.text = $"Score: {m_score}";
+            m_scoreText.text = $"Score: {ScoreManager.Instance.Score.Value}";
         }
     }
 
+
     public void addScore(int amount)
     {
-        m_score += amount;
+        ScoreManager.Instance.AddScore(amount);
         if (m_score < 0) m_score = 0;
         updateScoreUI();
     }
