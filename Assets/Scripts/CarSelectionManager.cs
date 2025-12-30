@@ -39,9 +39,9 @@ public class CarSelectionManager : MonoBehaviour
 
     void Update()
     {
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        if (IsPointerDownThisFrame())
         {
-            Vector2 pointOnScreen = Mouse.current.position.ReadValue();
+            Vector2 pointOnScreen = GetPointerPosition();
             Ray ray = Camera.main.ScreenPointToRay(pointOnScreen);
 
             RaycastHit[] hits = Physics.RaycastAll(ray, 1000f);
@@ -71,7 +71,7 @@ public class CarSelectionManager : MonoBehaviour
             }
         }
 
-        if (Mouse.current.leftButton.wasReleasedThisFrame && m_beginPathHandlingForCar)
+        if (IsPointerUpThisFrame() && m_beginPathHandlingForCar)
         {
             selectedCar.SetPath(m_pathDrawer.path);
 
@@ -158,6 +158,41 @@ public class CarSelectionManager : MonoBehaviour
             }
         }
     }
+
+
+    bool IsPointerDownThisFrame()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
+
+        if (Mouse.current != null)
+            return Mouse.current.leftButton.wasPressedThisFrame;
+
+        return false;
+    }
+
+    bool IsPointerUpThisFrame()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.press.wasReleasedThisFrame;
+
+        if (Mouse.current != null)
+            return Mouse.current.leftButton.wasReleasedThisFrame;
+
+        return false;
+    }
+
+    Vector2 GetPointerPosition()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.position.ReadValue();
+
+        if (Mouse.current != null)
+            return Mouse.current.position.ReadValue();
+
+        return Vector2.zero;
+    }
+
 
 
 }

@@ -47,40 +47,6 @@ public class Car : MonoBehaviour
     public void SetPath(IEnumerable<Vector3> path)
     {
         m_path = new List<Vector3>(path);
-
-        /*// if distance between last point of path and parking position less than minDistance
-        int lengthOfParkingTarget = parkingSpotTarget.listParkingTarget.Length;
-
-        float[] arrayDistance = new float[lengthOfParkingTarget];
-
-        Vector3 minPosition = parkingSpotTarget.listParkingTarget[0].position;
-
-        float minDistance = 1000f;
-
-        // need to taking the position has distance between targetParking and lastPosition is min
-        for (int i = 0; i < lengthOfParkingTarget; i++)
-        {
-            // Taking position for loop 
-            Vector3 positionParkingTarget = parkingSpotTarget.listParkingTarget[i].position;
-            Debug.Log("positionParkingTarget: " + positionParkingTarget);
-
-            // caculating distance between targetParking and lastPosition
-            arrayDistance[i] = Vector3.Distance(positionParkingTarget, m_path[m_path.Count - 1]);
-            Debug.Log("arrayDistance[i]: " + arrayDistance[i]);
-
-            if (arrayDistance[i] < minDistance)
-            {
-                Debug.Log("minDistance: " + arrayDistance[i]);
-                minDistance = arrayDistance[i];
-                minPosition = positionParkingTarget;
-            }
-        }
-
-        // add parkingTarget into path
-        if (minDistance < 2f)
-        {
-            m_path.Add(minPosition);
-        }*/
     }
 
     public void RunPath()
@@ -174,10 +140,10 @@ public class Car : MonoBehaviour
 
     void Update()
     {
-        return;
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        //return;
+        if (IsPointerDownThisFrame())
         {
-            Vector2 mouPos = Mouse.current.position.ReadValue();
+            Vector2 mouPos = GetPointerPosition();
             Ray ray = Camera.main.ScreenPointToRay(mouPos);
 
             RaycastHit[] hits = Physics.RaycastAll(ray, 1000f);
@@ -209,7 +175,7 @@ public class Car : MonoBehaviour
                 }
             }
         }
-        else if (Mouse.current.leftButton.wasReleasedThisFrame)
+        else if (IsPointerUpThisFrame())
         {
             if (m_animCoroutine == null)
             {
@@ -241,16 +207,38 @@ public class Car : MonoBehaviour
         }
     }
 
-    //public void StopAndReset()
-    //{
-    //    if (m_animCoroutine != null)
-    //    {
-    //        StopCoroutine(m_animCoroutine);
-    //        m_animCoroutine = null;
-    //    }
 
-    //    m_visualBody.transform.position = startPos.transform.position;
-    //    m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
-    //}
+    bool IsPointerDownThisFrame()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
+
+        if (Mouse.current != null)
+            return Mouse.current.leftButton.wasPressedThisFrame;
+
+        return false;
+    }
+
+    bool IsPointerUpThisFrame()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.press.wasReleasedThisFrame;
+
+        if (Mouse.current != null)
+            return Mouse.current.leftButton.wasReleasedThisFrame;
+
+        return false;
+    }
+
+    Vector2 GetPointerPosition()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.position.ReadValue();
+
+        if (Mouse.current != null)
+            return Mouse.current.position.ReadValue();
+
+        return Vector2.zero;
+    }
 
 }

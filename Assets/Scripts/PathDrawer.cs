@@ -35,7 +35,7 @@ public class PathDrawer : MonoBehaviour
     public void BeginPlottingPoint()
     {
         m_canPlotPoint = true;
-        Vector2 posMouse = Mouse.current.position.ReadValue();
+        Vector2 posMouse = GetPointerPosition();
         Ray ray = Camera.main.ScreenPointToRay(posMouse);
         if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
         {
@@ -110,7 +110,7 @@ public class PathDrawer : MonoBehaviour
         }
         if (m_canPlotPoint)
         {
-            Vector2 posMouse = Mouse.current.position.ReadValue();
+            Vector2 posMouse = GetPointerPosition();
             Ray ray = Camera.main.ScreenPointToRay(posMouse);
             if (Physics.Raycast(ray, out var hit, 1000f, groundMask))
             {
@@ -136,5 +136,16 @@ public class PathDrawer : MonoBehaviour
     }
 
     // extra function 
+    Vector2 GetPointerPosition()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.position.ReadValue();
+
+        if (Mouse.current != null)
+            return Mouse.current.position.ReadValue();
+
+        return Vector2.zero;
+    }
+
 
 }
