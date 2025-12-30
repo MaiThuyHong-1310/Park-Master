@@ -1,12 +1,15 @@
+using System.Collections;
 using UnityEngine;
 
 public class ParkingSpotTarget : MonoBehaviour
 {
-
     public Transform[] listParkingTarget;
 
-    void Start()
+    IEnumerator Start()
     {
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
+
         GameObject[] obj = GameObject.FindGameObjectsWithTag("ParkingSpot");
         listParkingTarget = new Transform[obj.Length];
 
@@ -15,5 +18,4 @@ public class ParkingSpotTarget : MonoBehaviour
             listParkingTarget[i] = obj[i].transform;
         }
     }
-
 }

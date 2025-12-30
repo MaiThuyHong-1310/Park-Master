@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -9,6 +10,7 @@ public class Car : MonoBehaviour
 {
     [SerializeField] Transform m_visualBody;
     List<Vector3> m_path;
+    //List<Vector3> m_historyPath = new 
     [SerializeField] float speedOfCar;
     bool isSelected;
     [SerializeField]
@@ -20,7 +22,17 @@ public class Car : MonoBehaviour
     Vector3 dir;
     public int statusCar = 0;
 
+
     Coroutine m_animCoroutine;
+
+    public Action<Car> onReachedDestination;
+
+    public bool ReachDestination()
+    {
+        return false;
+    }
+
+    public bool HasPath() => m_path != null && m_path.Count > 1;
 
     public Vector3 GetCarBodyPos()
     {
@@ -32,14 +44,16 @@ public class Car : MonoBehaviour
         return parkingSpotTarget;
     }
 
-    public void SetPath(List<Vector3> path)
+    public void SetPath(IEnumerable<Vector3> path)
     {
-        // if distance between last point of path and parking position less than minDistance
+        m_path = new List<Vector3>(path);
+
+        /*// if distance between last point of path and parking position less than minDistance
         int lengthOfParkingTarget = parkingSpotTarget.listParkingTarget.Length;
 
         float[] arrayDistance = new float[lengthOfParkingTarget];
 
-        Vector3 minPosition = parkingSpotTarget.listParkingTarget[0].position;  //goat 
+        Vector3 minPosition = parkingSpotTarget.listParkingTarget[0].position;
 
         float minDistance = 1000f;
 
@@ -51,7 +65,7 @@ public class Car : MonoBehaviour
             Debug.Log("positionParkingTarget: " + positionParkingTarget);
 
             // caculating distance between targetParking and lastPosition
-            arrayDistance[i] = Vector3.Distance(positionParkingTarget, path[path.Count - 1]);
+            arrayDistance[i] = Vector3.Distance(positionParkingTarget, m_path[m_path.Count - 1]);
             Debug.Log("arrayDistance[i]: " + arrayDistance[i]);
 
             if (arrayDistance[i] < minDistance)
@@ -65,12 +79,14 @@ public class Car : MonoBehaviour
         // add parkingTarget into path
         if (minDistance < 2f)
         {
-            path.Add(minPosition);
-        }
-        
-        m_path = path;
+            m_path.Add(minPosition);
+        }*/
+    }
+
+    public void RunPath()
+    {
         if (m_animCoroutine != null) StopCoroutine(m_animCoroutine);
-        m_animCoroutine = StartCoroutine(CarRunAnim(path));
+        m_animCoroutine = StartCoroutine(CarRunAnim(m_path));
     }
 
 
@@ -111,6 +127,38 @@ public class Car : MonoBehaviour
         }
 
         m_visualBody.position = path[path.Count - 1];
+
+        // Win event
+        float distance = Vector3.Distance(GetCarBodyPos(), GetParkingSpotTarget().transform.position);
+        if (distance < 1f)
+        {
+            onReachedDestination?.Invoke(this);
+        }
+    }
+
+
+    IEnumerator returnStartSpot()
+    {
+        Vector3 startPos = m_path[0];
+        while (Vector3.Distance(this.m_visualBody.position, startPos) < 0.1f)
+        {
+            this.m_visualBody.position = Vector3.Lerp(this.m_visualBody.position, startPos, 0.5f);
+        }
+        yield return null;
+
+        m_visualBody.position = startPos;
+        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+        m_animCoroutine = null;
+    }
+
+    public void StopAndStartReturn()
+    {
+        if (m_animCoroutine != null)
+        {
+            StopCoroutine(m_animCoroutine);
+            m_animCoroutine = null;
+        }
+        m_animCoroutine = StartCoroutine(returnStartSpot());
     }
 
     void Start()
@@ -120,6 +168,7 @@ public class Car : MonoBehaviour
 
     void Update()
     {
+        return;
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             Vector2 mouPos = Mouse.current.position.ReadValue();
@@ -137,9 +186,11 @@ public class Car : MonoBehaviour
                     }
                     else
                     {
-                        StopCoroutine(m_animCoroutine);
-                        m_visualBody.transform.position = startPos.transform.position;
-                        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+                        //StopCoroutine(m_animCoroutine);
+                        ////m_visualBody.transform.position = startPos.transform.position;
+                        //StartCoroutine();
+                        //m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+                        StopAndStartReturn();
                     }
 
                 }
@@ -180,6 +231,18 @@ public class Car : MonoBehaviour
             StopCoroutine(m_animCoroutine);
             m_animCoroutine = null;
         }
+    }
+
+    public void StopAndReset()
+    {
+        if (m_animCoroutine != null)
+        {
+            StopCoroutine(m_animCoroutine);
+            m_animCoroutine = null;
+        }
+
+        m_visualBody.transform.position = startPos.transform.position;
+        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
     }
 
 }

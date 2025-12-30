@@ -6,9 +6,9 @@ public class PathDrawer : MonoBehaviour
 {
     private LayerMask groundMask;    // Only raycast hits ground
     private LineRenderer line;
-    private float minPointDistance = 0.3f;
+    private float minPointDistance = 0.25f;
     private int maxPoints = 1000;
-    public CarSelectionManager selectionCar;
+    //public CarSelectionManager selectionCar;
     public Car car;
     public List<Vector3> path = new List<Vector3>();
 
@@ -30,64 +30,111 @@ public class PathDrawer : MonoBehaviour
 
     bool m_isDragging;
 
+    bool m_canPlotPoint;
+
+    public void BeginPlottingPoint()
+    {
+        m_canPlotPoint = true;
+        Vector2 posMouse = Mouse.current.position.ReadValue();
+        Ray ray = Camera.main.ScreenPointToRay(posMouse);
+        if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
+        {
+            lastPosition = hit.point;
+        }
+        else
+        {
+            Debug.Log("Shouldn't begin plotting points while mouse position fail to raycast ground");
+            lastPosition = default;
+        }
+    }
+
+    public void EndPlottingPoint()
+    {
+        m_canPlotPoint = false;
+    }
+
+    public void ClearPoints()
+    {
+        path.Clear();
+        line.positionCount = 0;
+    }
+
+    Vector3 CatmullRomSplineInterp(Vector3 p_mi1, Vector3 p_0, Vector3 p_1, Vector3 p_2, float t)
+    {
+        Vector3 a4 = p_0;
+        Vector3 a3 = (p_1 - p_mi1) / 2.0f;
+        Vector3 a1 = (p_2 - p_0) / 2.0f - 2.0f * p_1 + a3 + 2.0f * a4;
+        Vector3 a2 = 3.0f * p_1 - (p_2 - p_0) / 2.0f - 2.0f * a3 - 3.0f * a4;
+
+        return a1 * t * t * t + a2 * t * t + a3 * t + a4;
+    }
+
+    public List<Vector3> Smoothtify(List<Vector3> inputPoints, int division = 4)
+    {
+        if (inputPoints.Count < 3)
+        {
+            return new List<Vector3>(inputPoints);
+        }
+
+        List<Vector3> samplings = new List<Vector3>(inputPoints);
+        List<Vector3> outputPoints = new List<Vector3>(samplings.Count * division);
+
+        Vector3 firstSegment = inputPoints[1] - inputPoints[0];
+        Vector3 lastSegment = inputPoints[^1] - inputPoints[^2];
+
+        samplings.Insert(0, inputPoints[0] - firstSegment);
+        samplings.Add(inputPoints[^1] + lastSegment);
+
+        for (int i = 0; i < samplings.Count - 3; i++)
+        {
+            Vector3 prevPos = samplings[i + 1];
+            outputPoints.Add(prevPos);
+            for (int j = 0; j <= division; j++)
+            {
+                float t = j * 1.0f / division;
+                Vector3 pos = CatmullRomSplineInterp(samplings[i], samplings[i + 1], samplings[i + 2], samplings[i + 3], t);
+                prevPos = pos;
+                outputPoints.Add(prevPos);
+            }
+        }
+
+        return outputPoints;
+    }
+
     // Update is called once per frame
     void Update()
     {
-        car = selectionCar.selectedCar;
-
-        // if car is none -> no draw line
-        if (car == null)
+        if (GameController.Instance.m_isGameOver)
         {
             return;
         }
-
-        Vector2 posMouse = Mouse.current.position.ReadValue();
-        Ray ray = Camera.main.ScreenPointToRay(posMouse);
-
-        if (!m_isDragging && Mouse.current.leftButton.wasPressedThisFrame && Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
+        if (m_canPlotPoint)
         {
-            m_isDragging = true;
-            lastPosition = hit.point;
-
-            Debug.Log("Hit at: " + lastPosition);
-        }
-
-        if (m_isDragging)
-        {
-            if (Physics.Raycast(ray, out hit, 1000f, groundMask))
+            Vector2 posMouse = Mouse.current.position.ReadValue();
+            Ray ray = Camera.main.ScreenPointToRay(posMouse);
+            if (Physics.Raycast(ray, out var hit, 1000f, groundMask))
             {
                 var currentPosition = hit.point;
+                currentPosition.y = 0.5f;
 
                 if (path.Count < maxPoints && Vector3.Distance(lastPosition, currentPosition) > minPointDistance)
                 {
-                    var index = line.positionCount++;
+                    //var index = line.positionCount++;
 
-                    line.SetPosition(index, currentPosition);
+                    //line.SetPosition(index, currentPosition);
                     path.Add(currentPosition);
 
-                    lastPosition = hit.point;
+                    lastPosition = currentPosition;
                 }
             }
+
+            List<Vector3> smoothPoints = Smoothtify(path);
+            line.positionCount = smoothPoints.Count;
+            line.SetPositions(smoothPoints.ToArray());
         }
-
-
-        if (m_isDragging && Mouse.current.leftButton.wasReleasedThisFrame)
-        {
-            m_isDragging = false;
-
-            //Do something with path data
-
-            //---------------------------
-
-            if (path.Count >= 2)
-            {
-                car.SetPath(new List<Vector3>(path));
-            }
-
-            path.Clear();
-            line.positionCount = 0;
-            selectionCar.selectedCar = null;
-        }
+        return;
     }
+
+    // extra function 
 
 }
