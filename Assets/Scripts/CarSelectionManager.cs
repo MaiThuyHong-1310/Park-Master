@@ -1,17 +1,23 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class CarSelectionManager : MonoBehaviour
 {
-
+    [SerializeField] private PathDrawer m_pathDrawer;
     public Car selectedCar;
     [SerializeField] LayerMask carMask;
     [SerializeField] LayerMask StartPos;
     public Car[] arrayCar;
-    float minDistance2 = 1.5f;
+    float minDistance2 = 2f;
     int checkWin;
     int winCar = 0;
     int indexOfCarWin = 0;
+    bool hasLose;
+
+    public Action<int> onCollectingAllCar;
+    public Action varCarWithOtherCar;
 
     void Start()
     {
@@ -22,64 +28,20 @@ public class CarSelectionManager : MonoBehaviour
             arrayCar[i] = objCar[i].GetComponentInParent<Car>();
         }
         Debug.Log("STARTED!");
-        Debug.Log("DISTANCE OF TWO CARS: " + Vector3.Distance(arrayCar[0].GetCarBodyPos(), arrayCar[1].GetCarBodyPos()));
     }
+
+    public void Clear()
+    {
+        selectedCar = null;
+    }
+
+    bool m_beginPathHandlingForCar;
 
     void Update()
     {
-        if (!Mouse.current.leftButton.wasPressedThisFrame)
+        if (IsPointerDownThisFrame())
         {
-            for (int i = 0; i < arrayCar.Length; i++)
-            {
-                for (int j = i+1; j < arrayCar.Length; j++)
-                {
-                    // Take position of car
-                    Vector3 posCar1 = arrayCar[i].GetCarBodyPos();
-                    Vector3 posCar2 = arrayCar[j].GetCarBodyPos();
-                    Debug.Log("DISTANCE OF TWO CARS: " + Vector3.Distance(posCar1, posCar2));
-
-
-                    // Losed condition
-                    if (Vector3.Distance(posCar1, posCar2) < minDistance2)
-                    {
-                        StopAllCars();
-                        arrayCar[i].statusCar = -1;
-                        //Debug.Log("VARRRR, YOU LOSED!!!");
-                        checkWin = -1;
-                    }
-                }
-            }
-
-            
-            for (int i = indexOfCarWin; i < arrayCar.Length; i++)
-            {
-                //Debug.Log("DISTANCE BETWEEN CAR AND PARKINGSPOTTARGET: " + Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[i].GetParkingSpotTarget().transform.position));
-                if (Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[i].GetParkingSpotTarget().transform.position) == 0)
-                {
-                    winCar++;
-                    indexOfCarWin++;
-                }
-                //Debug.Log("NUMBER OF CAR WIN: " + winCar);
-            }
-
-            if (winCar == arrayCar.Length)
-            {
-                checkWin = 1;
-                winCar = 0;
-            }
-
-            if (checkWin == -1)
-            {
-                Debug.Log("YOU LOSED");
-            }
-            else
-            {
-                Debug.Log("YOU WIN");
-            }
-        }
-        else
-        {
-            Vector2 pointOnScreen = Mouse.current.position.ReadValue();
+            Vector2 pointOnScreen = GetPointerPosition();
             Ray ray = Camera.main.ScreenPointToRay(pointOnScreen);
 
             RaycastHit[] hits = Physics.RaycastAll(ray, 1000f);
@@ -90,14 +52,41 @@ public class CarSelectionManager : MonoBehaviour
                 {
                     selectedCar = hits[i].collider.GetComponentInParent<Car>();
                     selectedCar.SetSelected(); // true
-                }
-
-                if (LayerMask.LayerToName(hits[i].collider.gameObject.layer) == "Car")
-                {
-                    Debug.Log("EXIST IF CONDITION!");
+                    break;
                 }
             }
+
+            if(selectedCar != null)
+            {
+                //Stop and reset state of cars
+                for(int i = 0; i < arrayCar.Length; i++)
+                {
+                    arrayCar[i].StopAndReturnToStart();
+                }
+
+                reachedCars.Clear();
+                m_beginPathHandlingForCar = true;
+                m_pathDrawer.ClearPoints();
+                m_pathDrawer.BeginPlottingPoint();
+            }
         }
+
+        if (IsPointerUpThisFrame() && m_beginPathHandlingForCar)
+        {
+            selectedCar.SetPath(m_pathDrawer.path);
+
+            for (int i = 0; i < arrayCar.Length; i++)
+            {
+                if(arrayCar[i].HasPath()) arrayCar[i].RunPath();
+            }
+
+            m_beginPathHandlingForCar = false;
+            selectedCar = null;
+            m_pathDrawer.EndPlottingPoint();
+            m_pathDrawer.ClearPoints();
+        }
+
+        CheckLoseByDistance();
     }
 
     public void StopAllCars()
@@ -108,5 +97,102 @@ public class CarSelectionManager : MonoBehaviour
                 arrayCar[i].StopCar();
         }
     }
+
+    public void SetCarsForLevel(Car[] cars)
+    {
+        if (cars != null)
+        {
+            arrayCar = cars;
+        }
+        // register listener for all car in all levels
+        for (int i = 0; i < arrayCar.Length; i++)
+        {
+            arrayCar[i].onReachedDestination += OnCarReachedDestination;
+            
+        }
+
+        checkWin = 0;
+        winCar = 0;
+        indexOfCarWin = 0;
+    }
+
+    private HashSet<Car> reachedCars = new HashSet<Car>();
+
+    public void OnCarReachedDestination(Car car)
+    {
+        // avoid duplicates car
+        if (reachedCars.Contains(car)) return;
+
+        reachedCars.Add(car);
+        Debug.Log($"CAR {car.name} REACHES DESTINATION! ({reachedCars.Count}/{arrayCar.Length})");
+
+        // if all car reached destination
+        if (reachedCars.Count == arrayCar.Length)
+        {
+            Debug.Log("YOU WINNNN!");
+            onCollectingAllCar?.Invoke(arrayCar.Length);
+        }
+    }
+
+    void CheckLoseByDistance()
+    {
+        if (hasLose) return;
+        for (int i = 0; i < arrayCar.Length; i++)
+        {
+            for (int j = i + 1; j < arrayCar.Length; j++)
+            {
+                float dist = Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[j].GetCarBodyPos());
+
+                if (dist < minDistance2)
+                {
+                    hasLose = true;
+
+                    Debug.Log($"LOSE: {arrayCar[i].name} var with {arrayCar[j].name} (distance = {dist})");
+
+                    StopAllCars();
+
+                    // Send event lose to gameController
+                    varCarWithOtherCar?.Invoke();
+                    return;
+                }
+            }
+        }
+    }
+
+
+    bool IsPointerDownThisFrame()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
+
+        if (Mouse.current != null)
+            return Mouse.current.leftButton.wasPressedThisFrame;
+
+        return false;
+    }
+
+    bool IsPointerUpThisFrame()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.press.wasReleasedThisFrame;
+
+        if (Mouse.current != null)
+            return Mouse.current.leftButton.wasReleasedThisFrame;
+
+        return false;
+    }
+
+    Vector2 GetPointerPosition()
+    {
+        if (Touchscreen.current != null)
+            return Touchscreen.current.primaryTouch.position.ReadValue();
+
+        if (Mouse.current != null)
+            return Mouse.current.position.ReadValue();
+
+        return Vector2.zero;
+    }
+
+
 
 }

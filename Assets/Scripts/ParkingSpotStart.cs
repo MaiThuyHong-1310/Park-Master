@@ -1,12 +1,22 @@
+using System.Collections;
 using UnityEngine;
 
 public class ParkingSpotStart : MonoBehaviour
 {
-    public Transform[] listParkingStart;
+    public ParkingSpotStart[] listParkingStart;
+    //public Vector3 posOfStartSpot;
+
+    public void Init(ParkingSpotStart[] parkingStartBuffer)
+    {
+
+    }
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    /*IEnumerator Start()
     {
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
         GameObject[] obj = GameObject.FindGameObjectsWithTag("StartPosition");
         listParkingStart = new Transform[obj.Length];
 
@@ -14,5 +24,5 @@ public class ParkingSpotStart : MonoBehaviour
         {
             listParkingStart[i] = obj[i].transform;
         }
-    }
+    }*/
 }
