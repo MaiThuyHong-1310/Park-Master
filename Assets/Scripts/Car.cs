@@ -14,7 +14,7 @@ public class Car : MonoBehaviour
     [SerializeField] float speedOfCar;
     bool isSelected;
     [SerializeField]
-    CarSelectionManager carSelectionManage;
+    CarManager carSelectionManage;
     [SerializeField] LayerMask startPosMask;
     [SerializeField] ParkingSpotTarget parkingSpotTarget;
     [SerializeField] ParkingSpotStart startPos;
@@ -105,20 +105,30 @@ public class Car : MonoBehaviour
     IEnumerator ReturnToStart()
     {
         Vector3 targetPos = startPos.transform.position;
-        float stopDist = 0.05f;
+        Vector3 origin = m_visualBody.position;
 
-        while (Vector3.Distance(m_visualBody.position, targetPos) > stopDist)
+        float duration = 0.8f;
+        float timer = 0f;
+
+        while (timer < duration)
         {
-            float extraProgress = (speedOfCar * Time.deltaTime) / Vector3.Distance(m_visualBody.position, targetPos);
-            m_visualBody.position = Vector3.Lerp(m_visualBody.position, targetPos, extraProgress);
+            timer += Time.deltaTime;
+            float t = Mathf.Clamp01(timer / duration);
+
+            // smooth position
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+            m_visualBody.position = Vector3.Lerp(origin, targetPos, smoothT);
+
+            // smooth rotation follow
+            m_visualBody.rotation = Quaternion.Slerp(m_visualBody.rotation, Quaternion.Euler(90f, -90f, 0), 8f * Time.deltaTime);
             yield return null;
         }
 
         m_visualBody.position = targetPos;
         m_visualBody.rotation = Quaternion.Euler(90f, -90f, 0);
-
         m_animCoroutine = null;
     }
+
 
     public void StopAndReturnToStart()
     {
@@ -140,7 +150,7 @@ public class Car : MonoBehaviour
 
     void Update()
     {
-        //return;
+        /*return;
         if (IsPointerDownThisFrame())
         {
             Vector2 mouPos = GetPointerPosition();
@@ -186,7 +196,7 @@ public class Car : MonoBehaviour
                 m_animCoroutine = StartCoroutine(CarRunAnim(m_path));
             }
             
-        }
+        }*/
     }
 
     // extra function

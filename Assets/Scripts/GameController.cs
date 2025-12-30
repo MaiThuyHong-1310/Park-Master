@@ -5,7 +5,7 @@ using TMPro;
 
 public class GameController : Singleton<GameController>
 {
-    [SerializeField] CarSelectionManager m_carSelectionManager;
+    [SerializeField] CarManager m_carSelectionManager;
     [SerializeField] PathDrawer m_pathDrawer;
 
     [Header("Score")]

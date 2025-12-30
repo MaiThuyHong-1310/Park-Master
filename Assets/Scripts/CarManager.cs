@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class CarSelectionManager : MonoBehaviour
+public class CarManager : MonoBehaviour
 {
     [SerializeField] private PathDrawer m_pathDrawer;
     public Car selectedCar;
