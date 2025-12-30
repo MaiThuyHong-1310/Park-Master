@@ -137,29 +137,27 @@ public class Car : MonoBehaviour
     }
 
 
-    IEnumerator returnStartSpot()
-    {
-        Vector3 startPos = m_path[0];
-        while (Vector3.Distance(this.m_visualBody.position, startPos) < 0.1f)
-        {
-            this.m_visualBody.position = Vector3.Lerp(this.m_visualBody.position, startPos, 0.5f);
-        }
-        yield return null;
+    //IEnumerator returnStartSpot()
+    //{
+    //    Vector3 startPos = m_path[0];
+    //    while (Vector3.Distance(this.m_visualBody.position, startPos) < 0.1f)
+    //    {
+    //        this.m_visualBody.position = Vector3.Lerp(this.m_visualBody.position, startPos, speedOfCar * Time.deltaTime);
+    //    }
+    //    yield return null;
 
-        m_visualBody.position = startPos;
-        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
-        m_animCoroutine = null;
-    }
+    //    m_visualBody.position = startPos;
+    //    m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
+    //}
 
-    public void StopAndStartReturn()
-    {
-        if (m_animCoroutine != null)
-        {
-            StopCoroutine(m_animCoroutine);
-            m_animCoroutine = null;
-        }
-        m_animCoroutine = StartCoroutine(returnStartSpot());
-    }
+    //public void StopAndStartReturn()
+    //{
+    //    if (m_animCoroutine != null)
+    //    {
+    //        StopCoroutine(m_animCoroutine);
+    //        m_animCoroutine = null;
+    //    }
+    //}
 
     void Start()
     {
@@ -186,11 +184,9 @@ public class Car : MonoBehaviour
                     }
                     else
                     {
-                        //StopCoroutine(m_animCoroutine);
-                        ////m_visualBody.transform.position = startPos.transform.position;
-                        //StartCoroutine();
-                        //m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
-                        StopAndStartReturn();
+                        StopCoroutine(m_animCoroutine);
+                        m_visualBody.transform.position = startPos.transform.position;
+                        m_visualBody.transform.rotation = Quaternion.Euler(90f, -90f, 0);
                     }
 
                 }
