@@ -17,7 +17,8 @@ public class CarManager : MonoBehaviour
     bool hasLose;
 
     public Action<int> onCollectingAllCar;
-    public Action varCarWithOtherCar;
+    public Action<Car, Car, Vector3> varCarWithOtherCar;
+    //public Action reDrawForCar;
 
     void Start()
     {
@@ -36,6 +37,9 @@ public class CarManager : MonoBehaviour
     }
 
     bool m_beginPathHandlingForCar;
+
+    int m_increment;
+
 
     void Update()
     {
@@ -64,8 +68,12 @@ public class CarManager : MonoBehaviour
                     arrayCar[i].StopAndReturnToStart();
                 }
 
+                selectedCar.ClearPathVisual();
+
                 reachedCars.Clear();
                 m_beginPathHandlingForCar = true;
+                m_activeCollisionCheck = false;
+                m_pathDrawer.Line.sortingOrder = m_increment++;
                 m_pathDrawer.ClearPoints();
                 m_pathDrawer.BeginPlottingPoint();
             }
@@ -74,6 +82,7 @@ public class CarManager : MonoBehaviour
         if (IsPointerUpThisFrame() && m_beginPathHandlingForCar)
         {
             selectedCar.SetPath(m_pathDrawer.path);
+            selectedCar.DrawPathOnCar(m_pathDrawer.GetVisualPath(), m_pathDrawer.Line.sortingOrder);
 
             for (int i = 0; i < arrayCar.Length; i++)
             {
@@ -82,8 +91,10 @@ public class CarManager : MonoBehaviour
 
             m_beginPathHandlingForCar = false;
             selectedCar = null;
+            m_activeCollisionCheck = true;
             m_pathDrawer.EndPlottingPoint();
             m_pathDrawer.ClearPoints();
+            //reDrawForCar?.Invoke();
         }
 
         CheckLoseByDistance();
@@ -107,6 +118,7 @@ public class CarManager : MonoBehaviour
         // register listener for all car in all levels
         for (int i = 0; i < arrayCar.Length; i++)
         {
+            arrayCar[i].ForceToStartPosition();
             arrayCar[i].onReachedDestination += OnCarReachedDestination;
             
         }
@@ -134,25 +146,37 @@ public class CarManager : MonoBehaviour
         }
     }
 
+    bool m_activeCollisionCheck;
     void CheckLoseByDistance()
     {
-        if (hasLose) return;
+        if (!m_activeCollisionCheck) return;
+        //if (hasLose) return;
         for (int i = 0; i < arrayCar.Length; i++)
         {
             for (int j = i + 1; j < arrayCar.Length; j++)
             {
+                if (!arrayCar[i].IsMoving && !arrayCar[j].IsMoving) continue;
                 float dist = Vector3.Distance(arrayCar[i].GetCarBodyPos(), arrayCar[j].GetCarBodyPos());
 
                 if (dist < minDistance2)
                 {
-                    hasLose = true;
-
+                    //hasLose = true;
                     Debug.Log($"LOSE: {arrayCar[i].name} var with {arrayCar[j].name} (distance = {dist})");
 
-                    StopAllCars();
+                    Vector3 dir = (arrayCar[i].GetCarBodyPos() - arrayCar[j].GetCarBodyPos()).normalized;
+
+                    float force = 10f;
+                    float torque = 4f;
+
+                    arrayCar[i].FlyAway(dir, force, torque);
+                    arrayCar[j].FlyAway(-dir, force, torque);
+
+                    //StopAllCars();
+                    if (arrayCar[i].IsMoving) arrayCar[i].StopCar();
+                    if (arrayCar[j].IsMoving) arrayCar[j].StopCar();
 
                     // Send event lose to gameController
-                    varCarWithOtherCar?.Invoke();
+                    varCarWithOtherCar?.Invoke(arrayCar[i], arrayCar[j], dir);
                     return;
                 }
             }
@@ -160,7 +184,7 @@ public class CarManager : MonoBehaviour
     }
 
 
-    bool IsPointerDownThisFrame()
+    public bool IsPointerDownThisFrame()
     {
         if (Touchscreen.current != null)
             return Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
@@ -171,7 +195,7 @@ public class CarManager : MonoBehaviour
         return false;
     }
 
-    bool IsPointerUpThisFrame()
+    public bool IsPointerUpThisFrame()
     {
         if (Touchscreen.current != null)
             return Touchscreen.current.primaryTouch.press.wasReleasedThisFrame;
@@ -182,7 +206,7 @@ public class CarManager : MonoBehaviour
         return false;
     }
 
-    Vector2 GetPointerPosition()
+    public Vector2 GetPointerPosition()
     {
         if (Touchscreen.current != null)
             return Touchscreen.current.primaryTouch.position.ReadValue();
