@@ -5,14 +5,20 @@ using UnityEngine.InputSystem;
 public class PathDrawer : MonoBehaviour
 {
     private LayerMask groundMask;    // Only raycast hits ground
+    private LayerMask lineMask;
     private LineRenderer line;
     private float minPointDistance = 0.25f;
     private int maxPoints = 1000;
     //public CarSelectionManager selectionCar;
     public Car car;
     public List<Vector3> path = new List<Vector3>();
-
     Vector3 lastPosition;
+    [SerializeField] float baseOffsetY = 0f;
+    [SerializeField] float stepOffsetY = 0.02f;
+    //int strokeIndex = 0;
+    //float currentStrokeOffsetY;
+
+    public LineRenderer Line => line;
 
 
     void Start()
@@ -26,6 +32,14 @@ public class PathDrawer : MonoBehaviour
             line.widthMultiplier = 0.5f;
 
         groundMask = LayerMask.GetMask("Ground");
+        //lineMask = LayerMask.GetMask("Line");
+    }
+
+    public Vector3[] GetVisualPath()
+    {
+        Vector3[] points = new Vector3[line.positionCount];
+        line.GetPositions(points);
+        return points;
     }
 
     bool m_isDragging;
@@ -34,19 +48,22 @@ public class PathDrawer : MonoBehaviour
 
     public void BeginPlottingPoint()
     {
+        if (car != null) car.StopCar();
         m_canPlotPoint = true;
+
+        // each line, increase a little
+        //currentStrokeOffsetY = baseOffsetY + strokeIndex * stepOffsetY;
+        //strokeIndex++;
+
+        path.Clear();
+        line.positionCount = 0;
+
         Vector2 posMouse = GetPointerPosition();
         Ray ray = Camera.main.ScreenPointToRay(posMouse);
         if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
-        {
             lastPosition = hit.point;
-        }
-        else
-        {
-            Debug.Log("Shouldn't begin plotting points while mouse position fail to raycast ground");
-            lastPosition = default;
-        }
     }
+
 
     public void EndPlottingPoint()
     {
@@ -112,10 +129,13 @@ public class PathDrawer : MonoBehaviour
         {
             Vector2 posMouse = GetPointerPosition();
             Ray ray = Camera.main.ScreenPointToRay(posMouse);
+
             if (Physics.Raycast(ray, out var hit, 1000f, groundMask))
             {
                 var currentPosition = hit.point;
                 currentPosition.y = 0.5f;
+                //currentPosition = currentPosition + Vector3.up * path.Count * 0.01f;
+
 
                 if (path.Count < maxPoints && Vector3.Distance(lastPosition, currentPosition) > minPointDistance)
                 {
@@ -127,6 +147,7 @@ public class PathDrawer : MonoBehaviour
                     lastPosition = currentPosition;
                 }
             }
+
 
             List<Vector3> smoothPoints = Smoothtify(path);
             line.positionCount = smoothPoints.Count;

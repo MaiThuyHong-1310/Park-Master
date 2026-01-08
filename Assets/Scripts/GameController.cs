@@ -5,7 +5,7 @@ using TMPro;
 
 public class GameController : Singleton<GameController>
 {
-    [SerializeField] CarSelectionManager m_carSelectionManager;
+    [SerializeField] CarManager m_carSelectionManager;
     [SerializeField] PathDrawer m_pathDrawer;
 
     [Header("Score")]
@@ -25,6 +25,8 @@ public class GameController : Singleton<GameController>
 
     int m_scoreBackup;
 
+    bool reDrawForCar;
+
 
     private void Start()
     {
@@ -34,6 +36,7 @@ public class GameController : Singleton<GameController>
 
         m_carSelectionManager.onCollectingAllCar += OnWinLevel;
         m_carSelectionManager.varCarWithOtherCar += OnLoseLevel;
+        //m_carSelectionManager.reDrawForCar += ReDrawForCar;
 
         ScoreManager.Instance.Score.Value = 0;
         m_scoreBackup = ScoreManager.Instance.Score.Value;
@@ -86,16 +89,19 @@ public class GameController : Singleton<GameController>
         NextLevel();
     }
 
-    void OnLoseLevel()
+    private void ReDrawForCar()
+    {
+        reDrawForCar = true;
+    }
+
+    void OnLoseLevel(Car a, Car b, Vector3 dir)
     {
         m_isGameOver = true;
-        Debug.Log("VARR! YOU LOSED!");
+        Debug.Log($"VARR! YOU LOSED! {a.name} hit {b.name}");
         if (replayButton != null)
         {
             replayButton.SetActive(true);
         }
-        //ReplayLevel();
-        //replayButton.SetActive(false);
     }
 
     public void ReplayLevel()

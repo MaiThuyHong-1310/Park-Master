@@ -14,18 +14,29 @@ public class Car : MonoBehaviour
     [SerializeField] float speedOfCar;
     bool isSelected;
     [SerializeField]
-    CarSelectionManager carSelectionManage;
+    CarManager carSelectionManage;
     [SerializeField] LayerMask startPosMask;
     [SerializeField] ParkingSpotTarget parkingSpotTarget;
     [SerializeField] ParkingSpotStart startPos;
+    [SerializeField] LineRenderer carLine;
+    Rigidbody rb;
     Quaternion startRotationOfCar;
     Vector3 dir;
     public int statusCar = 0;
 
 
+    public bool IsMoving { get; private set; }
+
+
     Coroutine m_animCoroutine;
 
     public Action<Car> onReachedDestination;
+    public Action<Car> varOtherCar;
+
+    public void ForceToStartPosition()
+    {
+        m_visualBody.position = startPos.transform.position;
+    }
 
     public bool ReachDestination()
     {
@@ -47,12 +58,30 @@ public class Car : MonoBehaviour
     public void SetPath(IEnumerable<Vector3> path)
     {
         m_path = new List<Vector3>(path);
+        //DrawPathOnCar(m_path);
+    }
+
+    public void ClearPathVisual()
+    {
+        if (carLine == null) return;
+        carLine.positionCount = 0;
+    }
+
+    public void DrawPathOnCar(Vector3[] path, int renderingOrder) 
+    {
+        if (carLine == null) return;
+        carLine.sortingOrder = renderingOrder;
+        carLine.positionCount = path.Length;
+        carLine.SetPositions(path);
+        carLine.enabled = true;
     }
 
     public void RunPath()
     {
+        
         if (m_animCoroutine != null) StopCoroutine(m_animCoroutine);
         m_animCoroutine = StartCoroutine(CarRunAnim(m_path));
+        IsMoving = true;
     }
 
 
@@ -84,41 +113,70 @@ public class Car : MonoBehaviour
                 m_visualBody.position = Vector3.Lerp(path[pathIndex], path[pathIndex + 1], progress);
                 m_visualBody.rotation = Quaternion.Slerp(m_visualBody.rotation, targetRot, speedOfCar * Time.deltaTime);
                 yield return null;
+                BoxCollider bol = parkingSpotTarget.GetComponent<BoxCollider>();
+                Bounds b = bol.bounds;
+
+                // Take max on ground
+                Vector3 maxP = b.max;
+                Vector3 maxPOnGround = new Vector3(maxP.x, 0, maxP.z);
+
+                // Take min on ground
+                Vector3 minP = b.min;
+                Vector3 minPOnGround = new Vector3(minP.x, 0, minP.z);
+
+                //get x,z from car
+                float xC = m_visualBody.position.x;
+                float zC = m_visualBody.position.z;
+
+                Vector3 posOfParking = parkingSpotTarget.transform.position;
+                Vector3 finalPosOfCarWin = new Vector3(posOfParking.x, 0.15f, posOfParking.z);
+
+                if (xC > minPOnGround.x && xC < maxPOnGround.x && zC > minPOnGround.z && zC < maxPOnGround.z)
+                {
+                    path.Add(finalPosOfCarWin);
+                    //Debug.Log("Position of car: " + m_visualBody.position);
+                    //Debug.Log("Position of parking: " + parkingSpotTarget.transform.position);
+                    onReachedDestination?.Invoke(this);
+                }
             }
 
             remainDistance = (progress - 1) * segmentLength;
-
-            // move segment
             pathIndex++;
         }
 
         m_visualBody.position = path[path.Count - 1];
-
-        // Win event
-        float distance = Vector3.Distance(GetCarBodyPos(), GetParkingSpotTarget().transform.position);
-        if (distance < 1f)
-        {
-            onReachedDestination?.Invoke(this);
-        }
+        m_visualBody.rotation = Quaternion.Euler(90f, -90f, 0);
+        //yield return new WaitForSeconds(1f);
     }
 
     IEnumerator ReturnToStart()
     {
         Vector3 targetPos = startPos.transform.position;
-        float stopDist = 0.05f;
+        Vector3 origin = m_visualBody.position;
+        Quaternion originRot = m_visualBody.rotation;
 
-        while (Vector3.Distance(m_visualBody.position, targetPos) > stopDist)
+        float duration = 0.3f;
+        float timer = 0f;
+
+        while (timer < duration)
         {
-            float extraProgress = (speedOfCar * Time.deltaTime) / Vector3.Distance(m_visualBody.position, targetPos);
-            m_visualBody.position = Vector3.Lerp(m_visualBody.position, targetPos, extraProgress);
+            timer += Time.deltaTime;
+            float t = Mathf.Clamp01(timer / duration);
+
+            // smooth position
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+            m_visualBody.position = Vector3.Lerp(origin, targetPos, smoothT);
+
+            // smooth rotation follow
+            m_visualBody.rotation = Quaternion.Slerp(originRot, Quaternion.Euler(90f, -90f, 0), smoothT);
             yield return null;
         }
 
         m_visualBody.position = targetPos;
         m_visualBody.rotation = Quaternion.Euler(90f, -90f, 0);
-
         m_animCoroutine = null;
     }
+
 
     public void StopAndReturnToStart()
     {
@@ -131,16 +189,50 @@ public class Car : MonoBehaviour
         m_animCoroutine = StartCoroutine(ReturnToStart());
     }
 
+    public void FlyAway(Vector3 dir, float force, float torqueForce = 4f)
+    {
+        StopCar();
 
+        if (rb == null) rb = m_visualBody.GetComponent<Rigidbody>();
+
+        if (rb == null)
+        {
+            Debug.Log($"[{name}] Not found Rigidbody on m_visualBody!");
+            return;
+        }
+
+        // Turn on physics
+        rb.isKinematic = false;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+        // Reset velocity
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // AddForce to car fly flow inertia
+        rb.AddForce(dir.normalized * force, ForceMode.Impulse);
+
+        // AddTorque 
+        float randomSign = UnityEngine.Random.Range(-0.5f, 0.5f);
+        rb.AddTorque(Vector3.up * torqueForce * randomSign, ForceMode.Impulse);
+
+        Vector3 p = m_visualBody.position;
+        p.y = 1f; 
+        m_visualBody.position = p;
+    }
 
     void Start()
     {
-        startRotationOfCar = this.transform.rotation;    
+        startRotationOfCar = this.transform.rotation;
+        Debug.Log("Pos of car: " + m_visualBody.position);
+        //carSelectionManage.varCarWithOtherCar += ;
     }
 
     void Update()
     {
-        //return;
+        //Debug.Log("pos of car: " + m_visualBody.position);
+        /*return;
         if (IsPointerDownThisFrame())
         {
             Vector2 mouPos = GetPointerPosition();
@@ -186,7 +278,7 @@ public class Car : MonoBehaviour
                 m_animCoroutine = StartCoroutine(CarRunAnim(m_path));
             }
             
-        }
+        }*/
     }
 
     // extra function
@@ -205,6 +297,8 @@ public class Car : MonoBehaviour
             StopCoroutine(m_animCoroutine);
             m_animCoroutine = null;
         }
+
+        IsMoving = false;
     }
 
 

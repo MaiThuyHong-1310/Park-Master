@@ -1,0 +1,10 @@
+# ninja log v5
+48	3825	7888755327492248	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	72cfb397b190db06
+64	3878	7888755328011364	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	20db43532aecbed1
+13	4124	7888755330348868	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	f1b7d2ca70947af9
+159	4191	7888755331165460	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	18fc42dad9b22f69
+1	4273	7888755332126529	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	49bc727a00fd42e7
+106	4531	7888755334706129	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	8beeb5b30ae1a00a
+89	4534	7888755334685815	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	dfe492b5a5657584
+29	4827	7888755337493095	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	7f5160028931ac71
+4831	5059	7888755340005033	D:/game/Park Master/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/6fcmp5b2/obj/arm64-v8a/libgame.so	f2efed727d8f17c6
