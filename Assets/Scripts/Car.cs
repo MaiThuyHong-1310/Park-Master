@@ -14,7 +14,7 @@ public class Car : MonoBehaviour
     [SerializeField] float speedOfCar;
     bool isSelected;
     [SerializeField]
-    CarSelectionManager carSelectionManage;
+    CarManager carSelectionManage;
     [SerializeField] LayerMask startPosMask;
     [SerializeField] ParkingSpotTarget parkingSpotTarget;
     [SerializeField] ParkingSpotStart startPos;
@@ -95,11 +95,33 @@ public class Car : MonoBehaviour
         m_visualBody.position = path[path.Count - 1];
 
         // Win event
-        float distance = Vector3.Distance(GetCarBodyPos(), GetParkingSpotTarget().transform.position);
-        if (distance < 1f)
+        ParkingSpotTarget parkingTarget = GetComponentInChildren<ParkingSpotTarget>();
+        BoxCollider boxParkingTarget = parkingTarget.GetComponent<BoxCollider>();
+
+        // get Bouds
+        Bounds boundParkingTarget = boxParkingTarget.bounds;
+
+        // Take bound left max on ground
+        Vector3 bLeftMax= boundParkingTarget.max;
+        Vector3 bLeftMaxOnGroundTmp = bLeftMax;
+        bLeftMaxOnGroundTmp.y = 0;
+        Vector3 bLeftMaxOnGround = bLeftMaxOnGroundTmp;
+
+        // Take bound left min on ground
+        Vector3 bLeftMin = boundParkingTarget.min;
+        Vector3 bLeftMinOnGroundTmp = bLeftMin;
+        bLeftMinOnGroundTmp.y = 0;
+        Vector3 bLeftMinOnGround = bLeftMinOnGroundTmp;
+
+        if (GetCarBodyPos().x > bLeftMinOnGround.x && GetCarBodyPos().x < bLeftMaxOnGround.x && GetCarBodyPos().z > bLeftMinOnGround.z && GetCarBodyPos().z < bLeftMaxOnGround.z)
         {
             onReachedDestination?.Invoke(this);
         }
+        //float distance = Vector3.Distance(GetCarBodyPos(), GetParkingSpotTarget().transform.position);
+        //if (distance < 1f)
+        //{
+        //    onReachedDestination?.Invoke(this);
+        //}
     }
 
     IEnumerator ReturnToStart()

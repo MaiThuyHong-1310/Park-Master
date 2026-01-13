@@ -69,6 +69,7 @@ public class PathDrawer : MonoBehaviour
         return a1 * t * t * t + a2 * t * t + a3 * t + a4;
     }
 
+
     public List<Vector3> Smoothtify(List<Vector3> inputPoints, int division = 4)
     {
         if (inputPoints.Count < 3)

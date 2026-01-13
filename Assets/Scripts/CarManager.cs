@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class CarSelectionManager : MonoBehaviour
+public class CarManager : MonoBehaviour
 {
-    [SerializeField] private PathDrawer m_pathDrawer;
+    //[SerializeField] private PathDrawer m_pathDrawer;
+    [SerializeField] private PathDrawerTmp m_pathDrawer;
     public Car selectedCar;
     [SerializeField] LayerMask carMask;
     [SerializeField] LayerMask StartPos;
@@ -66,7 +67,7 @@ public class CarSelectionManager : MonoBehaviour
 
                 reachedCars.Clear();
                 m_beginPathHandlingForCar = true;
-                m_pathDrawer.ClearPoints();
+                //m_pathDrawer.ClearPoints();
                 m_pathDrawer.BeginPlottingPoint();
             }
         }

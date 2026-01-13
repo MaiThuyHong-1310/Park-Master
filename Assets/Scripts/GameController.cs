@@ -5,8 +5,8 @@ using TMPro;
 
 public class GameController : Singleton<GameController>
 {
-    [SerializeField] CarSelectionManager m_carSelectionManager;
-    [SerializeField] PathDrawer m_pathDrawer;
+    [SerializeField] CarManager m_carSelectionManager;
+    [SerializeField] PathDrawerTmp m_pathDrawer;
 
     [Header("Score")]
     [SerializeField] TextMeshProUGUI m_scoreText;
@@ -71,6 +71,8 @@ public class GameController : Singleton<GameController>
 
         m_currentLevel = Instantiate(Resources.Load<GameObject>($"Level{id % totalLevel}"))
             .GetComponent<Level>();
+
+        m_pathDrawer.ClearMesh();
 
         m_currentLevel.Init();
         m_carSelectionManager.SetCarsForLevel(m_currentLevel.Cars.ToArray());
