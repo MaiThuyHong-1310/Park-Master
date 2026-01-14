@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -86,6 +86,7 @@ public class CarManager : MonoBehaviour
             m_pathDrawer.EndPlottingPoint();
             m_pathDrawer.ClearPoints();
         }
+
 
         CheckLoseByDistance();
     }

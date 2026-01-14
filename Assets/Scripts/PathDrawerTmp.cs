@@ -12,7 +12,6 @@ public class PathDrawerTmp : MonoBehaviour
 
     public Car car;
     public List<Vector3> path = new List<Vector3>();
-    public List<Vector3> pathTmp = new List<Vector3>();
 
     Vector3 lastPosition;
 
@@ -54,6 +53,7 @@ public class PathDrawerTmp : MonoBehaviour
         }
     }
 
+
     public void EndPlottingPoint()
     {
         m_canPlotPoint = false;
@@ -62,10 +62,10 @@ public class PathDrawerTmp : MonoBehaviour
 
     public void ClearPoints()
     {
-        pathTmp = path;
         path.Clear();
         //_mesh.Clear();
     }
+
 
     public void ClearMesh()
     {
@@ -240,7 +240,7 @@ public class PathDrawerTmp : MonoBehaviour
             }
         }
 
-        _mesh.Clear();
+        //_mesh.Clear();
         _mesh.vertices = verts;
         _mesh.uv = uvs;
         _mesh.triangles = tris;

@@ -21,6 +21,7 @@ public class Car : MonoBehaviour
     Quaternion startRotationOfCar;
     Vector3 dir;
     public int statusCar = 0;
+    [SerializeField] PathDrawerTmp pathDrawer;
 
 
     Coroutine m_animCoroutine;
