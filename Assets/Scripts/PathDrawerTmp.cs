@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class PathDrawerTmp : MonoBehaviour
 {
     private LayerMask groundMask;    // Only raycast hits ground
+    private LayerMask StartPos;
 
     private float minPointDistance = 0.25f;
     private int maxPoints = 1000;
@@ -42,15 +43,37 @@ public class PathDrawerTmp : MonoBehaviour
         m_canPlotPoint = true;
         Vector2 posMouse = GetPointerPosition();
         Ray ray = Camera.main.ScreenPointToRay(posMouse);
-        if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
+
+        // Take positon of TargetSpot
+        if (car != null)
         {
-            lastPosition = hit.point;
+            Bounds boundsOfParkingSpotTarget = car.GetComponent<ParkingSpotTarget>().GetComponent<Collider>().bounds;
+            Vector3 bLeftMax = boundsOfParkingSpotTarget.max;
+            Vector3 bLeftMaxOnGroundTmp = bLeftMax;
+            bLeftMaxOnGroundTmp.y = 0;
+            Vector3 bLeftMaxOnGround = bLeftMaxOnGroundTmp;
+
+            // Take bound left min on ground
+            Vector3 bLeftMin = boundsOfParkingSpotTarget.min;
+            Vector3 bLeftMinOnGroundTmp = bLeftMin;
+            bLeftMinOnGroundTmp.y = 0;
+            Vector3 bLeftMinOnGround = bLeftMinOnGroundTmp;
+
+            if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
+            {
+                lastPosition = hit.point;
+                if (lastPosition.x > bLeftMinOnGround.x && lastPosition.x < bLeftMaxOnGround.x && lastPosition.z > bLeftMinOnGround.z && lastPosition.z < bLeftMaxOnGround.z)
+                {
+                    lastPosition = car.GetComponent<ParkingSpotTarget>().GetComponent<Collider>().transform.position;
+                }
+            }
+            else
+            {
+                Debug.Log("Shouldn't begin plotting points while mouse position fail to raycast ground");
+                lastPosition = default;
+            }
         }
-        else
-        {
-            Debug.Log("Shouldn't begin plotting points while mouse position fail to raycast ground");
-            lastPosition = default;
-        }
+
     }
 
 
@@ -86,10 +109,18 @@ public class PathDrawerTmp : MonoBehaviour
         Vector2 posMouse = GetPointerPosition();
         Ray ray = Camera.main.ScreenPointToRay(posMouse);
 
+        //var hits = Physics.RaycastAll(ray, 1000f);
+        //if (hits == null || hits.Length == 0) return;
+
+        //System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        //int firstLayer = hits[0].collider.gameObject.layer;
+        //bool firstIsGround = ((1 << firstLayer) & groundMask.value) != 0;
+
         if (Physics.Raycast(ray, out var hit, 1000f, groundMask))
         {
             var currentPosition = hit.point;
-            currentPosition.y = 0.5f;
+            currentPosition.y = 0.1f;
 
             if (path.Count < maxPoints && Vector3.Distance(lastPosition, currentPosition) > minPointDistance)
             {
@@ -100,6 +131,7 @@ public class PathDrawerTmp : MonoBehaviour
                 RebuildRoadMesh();
             }
         }
+
     }
 
     void RebuildRoadMesh()
@@ -190,7 +222,8 @@ public class PathDrawerTmp : MonoBehaviour
 
         for (int i = 0; i < n; i++)
         {
-            Vector3 p = centerLine[i];
+            Vector3 pWorld = centerLine[i];
+            Vector3 p = transform.InverseTransformPoint(pWorld);
 
             // hướng (tangent) bằng finite diff
             Vector3 dir;

@@ -178,7 +178,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Car
   m_visualBody: {fileID: 6080983647053734956}
-  speedOfCar: 20
+  speedOfCar: 30
   carSelectionManage: {fileID: 0}
   startPosMask:
     serializedVersion: 2
@@ -186,7 +186,7 @@ MonoBehaviour:
   parkingSpotTarget: {fileID: 7663883871884560113}
   startPos: {fileID: 212615703422498597}
   statusCar: 0
-  pathDrawer: {fileID: 0}
+  pathDrawer: {fileID: 1775426768834017713}
 --- !u!1 &1535014299609316074
 GameObject:
   m_ObjectHideFlags: 0
@@ -1336,7 +1336,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Car
   m_visualBody: {fileID: 7685794779458395380}
-  speedOfCar: 20
+  speedOfCar: 30
   carSelectionManage: {fileID: 0}
   startPosMask:
     serializedVersion: 2
@@ -1344,7 +1344,7 @@ MonoBehaviour:
   parkingSpotTarget: {fileID: 2809872053208172435}
   startPos: {fileID: 3831544334810879595}
   statusCar: 0
-  pathDrawer: {fileID: 0}
+  pathDrawer: {fileID: 272939375834312292}
 --- !u!1 &9139371121617571144
 GameObject:
   m_ObjectHideFlags: 0

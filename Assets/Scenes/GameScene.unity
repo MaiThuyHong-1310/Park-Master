@@ -1901,6 +1901,8 @@ MonoBehaviour:
   samplesPerSegment: 8
   handleScale: 0.33
   uvTiling: 1
+  _mf: {fileID: 0}
+  _mesh: {fileID: 0}
 --- !u!23 &1913689322
 MeshRenderer:
   m_ObjectHideFlags: 0

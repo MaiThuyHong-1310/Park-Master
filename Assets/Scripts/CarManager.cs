@@ -6,8 +6,9 @@ using UnityEngine.InputSystem;
 public class CarManager : MonoBehaviour
 {
     //[SerializeField] private PathDrawer m_pathDrawer;
-    [SerializeField] private PathDrawerTmp m_pathDrawer;
+    //[SerializeField] private PathDrawerTmp m_pathDrawer;
     public Car selectedCar;
+    public int indexOfCarSelected;
     [SerializeField] LayerMask carMask;
     [SerializeField] LayerMask StartPos;
     public Car[] arrayCar;
@@ -53,6 +54,13 @@ public class CarManager : MonoBehaviour
                 {
                     selectedCar = hits[i].collider.GetComponentInParent<Car>();
                     selectedCar.SetSelected(); // true
+                    for (int j = 0; j < arrayCar.Length; j++)
+                    {
+                        if (arrayCar[j] == selectedCar)
+                        {
+                            indexOfCarSelected = j;
+                        }
+                    }
                     break;
                 }
             }
@@ -68,13 +76,17 @@ public class CarManager : MonoBehaviour
                 reachedCars.Clear();
                 m_beginPathHandlingForCar = true;
                 //m_pathDrawer.ClearPoints();
-                m_pathDrawer.BeginPlottingPoint();
+                //m_pathDrawer.BeginPlottingPoint();
+                selectedCar.pathDrawer.BeginPlottingPoint();
             }
         }
 
         if (IsPointerUpThisFrame() && m_beginPathHandlingForCar)
         {
-            selectedCar.SetPath(m_pathDrawer.path);
+            if (selectedCar != null)
+            {
+                            selectedCar.SetPath(selectedCar.pathDrawer.path);
+            //arrayCar[indexOfCarSelected].SetPath(arrayCar[indexOfCarSelected].pathDrawer.path);
 
             for (int i = 0; i < arrayCar.Length; i++)
             {
@@ -82,9 +94,12 @@ public class CarManager : MonoBehaviour
             }
 
             m_beginPathHandlingForCar = false;
+            //selectedCar = null;
+            selectedCar.pathDrawer.EndPlottingPoint();
+            selectedCar.pathDrawer.ClearPoints();
             selectedCar = null;
-            m_pathDrawer.EndPlottingPoint();
-            m_pathDrawer.ClearPoints();
+            }
+
         }
 
 

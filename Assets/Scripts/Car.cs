@@ -21,7 +21,7 @@ public class Car : MonoBehaviour
     Quaternion startRotationOfCar;
     Vector3 dir;
     public int statusCar = 0;
-    [SerializeField] PathDrawerTmp pathDrawer;
+    public PathDrawerTmp pathDrawer;
 
 
     Coroutine m_animCoroutine;
@@ -132,7 +132,7 @@ public class Car : MonoBehaviour
 
         while (Vector3.Distance(m_visualBody.position, targetPos) > stopDist)
         {
-            float extraProgress = (speedOfCar * Time.deltaTime) / Vector3.Distance(m_visualBody.position, targetPos);
+            float extraProgress = (50 * Time.deltaTime) / Vector3.Distance(m_visualBody.position, targetPos);
             m_visualBody.position = Vector3.Lerp(m_visualBody.position, targetPos, extraProgress);
             yield return null;
         }
