@@ -118,11 +118,6 @@ public class Car : MonoBehaviour
         {
             onReachedDestination?.Invoke(this);
         }
-        //float distance = Vector3.Distance(GetCarBodyPos(), GetParkingSpotTarget().transform.position);
-        //if (distance < 1f)
-        //{
-        //    onReachedDestination?.Invoke(this);
-        //}
     }
 
     IEnumerator ReturnToStart()
@@ -158,7 +153,8 @@ public class Car : MonoBehaviour
 
     void Start()
     {
-        startRotationOfCar = this.transform.rotation;    
+        startRotationOfCar = this.transform.rotation;
+        m_visualBody.transform.position = startPos.transform.position;
     }
 
     void Update()
